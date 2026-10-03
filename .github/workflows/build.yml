@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install SDK packages
+        run: |
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" \
+            "build-tools;34.0.0" "platforms;android-34" "platforms;android-37.0" || true
+
+      - name: Build legacy flavor (target 23)
+        run: bash build.sh legacy
+
+      - name: Build modern flavor (target 37)
+        run: bash build.sh modern
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: |
+            SimpleLauncher-legacy.apk
+            SimpleLauncher-android17.apk
