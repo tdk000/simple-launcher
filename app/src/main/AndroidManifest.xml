@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Версии и SDK здесь НАМЕРЕННО не написаны: их выставляет сборка
+  (build.sh: flavor legacy -> min 21 / target 23, modern -> min 21 / target 37;
+  либо app/build.gradle для Android Studio). Один исходник — два APK.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ru.simplelauncher"
-    android:versionCode="2"
-    android:versionName="1.1">
+    package="ru.simplelauncher">
 
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="23" />
+    <!-- С targetSdk 28+ без него меню «Удалить» (Intent.ACTION_DELETE) не работает:
+         система требует REQUEST_DELETE_PACKAGES. Разрешение normal, выдаётся при
+         установке, на старых устройствах и старых target'ах просто не используется. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
+    <!-- Видимость пакетов (targetSdk 30+): без этого блока queryIntentActivities()
+         на Android 11+ вернёт пустоту, и сетка лаунчера будет пустой.
+         Intent-фильтр открывает видимость ВСЕМ пакетам, у которых есть
+         запускаемая activity — ровно то, что показывает лаунчер. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="false"

@@ -8,4 +8,15 @@
     <string name="menu_cancel">Отмена</string>
     <string name="no_apps">Не найдено ни одного приложения</string>
     <string name="reload">Обновить список</string>
+    <string name="menu_hide_search">Скрыть строку поиска</string>
+    <string name="menu_show_search">Показать строку поиска</string>
+    <string name="search_off_toast">Строка поиска скрыта. Долгий тап по часам — вернуть.</string>
+    <string name="menu_sort">Сортировка</string>
+    <string name="sort_applied">Сортировка применена</string>
+    <string name="sort_name_asc">По имени (А→Я)</string>
+    <string name="sort_name_desc">По имени (Я→А)</string>
+    <string name="sort_install">По дате установки (свежие сначала)</string>
+    <string name="sort_update">По дате обновления (свежие сначала)</string>
+    <string name="sort_usage">По частоте использования</string>
+    <string name="sort_size">По размеру APK (крупные сначала)</string>
 </resources>

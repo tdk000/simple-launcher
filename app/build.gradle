@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace 'ru.simplelauncher'
-    compileSdk 34
+    compileSdk 37             // Android 17
 
     defaultConfig {
         applicationId "ru.simplelauncher"
         minSdk 21
-        targetSdk 23          // намеренно: не тянет runtime-permissions и новый UI
-        versionCode 1
-        versionName "1.0"
+        targetSdk 37          // modern-флейвор; legacy (target 23) собирает build.sh legacy
+        versionCode 8
+        versionName "1.7"
     }
 
     buildTypes {

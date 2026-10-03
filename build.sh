@@ -8,11 +8,24 @@
 #     ANDROID_HOME   (по умолчанию /opt/android-sdk или ~/Android/Sdk)
 #     JAVA_HOME
 #
-#  Результат: build/SimpleLauncher.apk  (подписан, выровнен, ставится на телефон)
+#  Результат: build/<имя>.apk  (подписан, выровнен, ставится на телефон)
+#
+#  ДВА ФЛЕЙВОРА из одного исходника:
+#     bash build.sh modern   (по умолчанию) targetSdk 37 — Android 17: Pixel 6a и новее
+#     bash build.sh legacy   targetSdk 23 — Android 6: Xperia Z3 Compact и старые
 # =====================================================================
 set -euo pipefail
 
 cd "$(dirname "$0")"
+
+# ---------- флейвор ----------
+FLAVOR="${1:-modern}"
+case "$FLAVOR" in
+  modern) TARGET_API=37; VCODE=8; VNAME="1.7"; PLATDIR="android-37.0"; OUTNAME="SimpleLauncher-android17.apk" ;;
+  legacy) TARGET_API=23; VCODE=7; VNAME="1.7"; PLATDIR="android-34";     OUTNAME="SimpleLauncher-legacy.apk"  ;;
+  *) echo "Использование: bash build.sh [modern|legacy]"; exit 2 ;;
+esac
+echo "== флейвор:  $FLAVOR (target $TARGET_API, version $VNAME/$VCODE)"
 
 # ---------- пути к SDK ----------
 if [ -z "${ANDROID_HOME:-}" ]; then
@@ -26,9 +39,9 @@ BT="${ANDROID_HOME}/build-tools/34.0.0"
 [ -d "$BT" ] || BT="$(ls -d "$ANDROID_HOME"/build-tools/* 2>/dev/null | sort -V | tail -1)"
 : "${BT:?В SDK нет build-tools. Поставь: sdkmanager \"build-tools;34.0.0\"}"
 
-PLATFORM="${ANDROID_HOME}/platforms/android-34/android.jar"
+PLATFORM="${ANDROID_HOME}/platforms/${PLATDIR}/android.jar"
 [ -f "$PLATFORM" ] || PLATFORM="$(ls "$ANDROID_HOME"/platforms/*/android.jar 2>/dev/null | sort -V | tail -1)"
-: "${PLATFORM:?В SDK нет platforms;android-34. Поставь: sdkmanager \"platforms;android-34\"}"
+: "${PLATFORM:?В SDK нет platforms;${PLATDIR}. Поставь: sdkmanager \"platforms;${PLATDIR}\"}"
 
 AAPT2="$BT/aapt2"
 D8="$BT/d8"
@@ -41,7 +54,7 @@ GEN="$OUT/gen"
 OBJ="$OUT/classes"
 APK_UNSIGNED="$OUT/app-unsigned.apk"
 APK_ALIGNED="$OUT/app-aligned.apk"
-APK_FINAL="$OUT/SimpleLauncher.apk"
+APK_FINAL="$OUT/$OUTNAME"
 # Keystore держим ВНЕ build/, потому что build/ очищается при каждой сборке.
 # Ключ должен быть одним и тем же, иначе обновление поверх установленного
 # APK упадёт с INSTALL_FAILED_UPDATE_INCOMPATIBLE.
@@ -74,9 +87,9 @@ FLAT_LIST="$(find "$RES_FLAT" -name '*.flat' | tr '\n' ' ')"
   --manifest "$SRC/AndroidManifest.xml" \
   --java "$GEN" \
   --min-sdk-version "$MIN_API" \
-  --target-sdk-version 23 \
-  --version-code 2 \
-  --version-name 1.1 \
+  --target-sdk-version "$TARGET_API" \
+  --version-code "$VCODE" \
+  --version-name "$VNAME" \
   --auto-add-overlay \
   $FLAT_LIST
 echo "      ok -> $APK_UNSIGNED, R.java в $GEN"
@@ -145,6 +158,8 @@ echo "  ГОТОВО: $APK_FINAL"
 echo "  размер: $(du -h "$APK_FINAL" | cut -f1)"
 echo "======================================================================"
 "$BT/aapt2" dump badging "$APK_FINAL" 2>/dev/null | grep -E "^package|sdkVersion|targetSdkVersion|launchable-activity|application-label" | sed 's/^/  /'
+cp "$APK_FINAL" "./$OUTNAME"
+echo "  копия:      ./$OUTNAME"
 echo
 echo "  Установка:  adb install -r $APK_FINAL"
 echo "  Или скопируй APK на телефон и открой его файловым менеджером."
