@@ -21,8 +21,8 @@ cd "$(dirname "$0")"
 # ---------- флейвор ----------
 FLAVOR="${1:-modern}"
 case "$FLAVOR" in
-  modern) TARGET_API=37; VCODE=8; VNAME="1.7"; PLATDIR="android-37.0"; OUTNAME="SimpleLauncher-android17.apk" ;;
-  legacy) TARGET_API=23; VCODE=7; VNAME="1.7"; PLATDIR="android-34";     OUTNAME="SimpleLauncher-legacy.apk"  ;;
+  modern) TARGET_API=37; VCODE=10; VNAME="1.8"; PLATDIR="android-37.0"; OUTNAME="SimpleLauncher-android17.apk" ;;
+  legacy) TARGET_API=23; VCODE=9; VNAME="1.8"; PLATDIR="android-34";     OUTNAME="SimpleLauncher-legacy.apk"  ;;
   *) echo "Использование: bash build.sh [modern|legacy]"; exit 2 ;;
 esac
 echo "== флейвор:  $FLAVOR (target $TARGET_API, version $VNAME/$VCODE)"

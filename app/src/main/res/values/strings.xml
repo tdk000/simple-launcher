@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Простой лаунчер</string>
     <string name="loading">Загрузка приложений…</string>
-    <string name="search_hint">Поиск</string>
+    <string name="search_hint">Поиск в телефоне</string>
     <string name="menu_app_info">О приложении</string>
     <string name="menu_uninstall">Удалить</string>
     <string name="menu_cancel">Отмена</string>
@@ -19,4 +19,9 @@
     <string name="sort_update">По дате обновления (свежие сначала)</string>
     <string name="sort_usage">По частоте использования</string>
     <string name="sort_size">По размеру APK (крупные сначала)</string>
+        <string name="not_found_local">В телефоне не найдено. Нажмите «поиск» на клавиатуре — поиск в интернете.</string>
+    <string name="menu_switch_launcher">Сменить домашний лаунчер…</string>
+    <string name="switch_title">Выход из Простого лаунчера</string>
+    <string name="switch_msg">Сейчас откроется карточка лаунчера в настройках. Пролистайте до пункта «Запуск по умолчанию» и нажмите «Удалить настройки по умолчанию». После этого кнопка «Домой» предложит выбрать домашнее приложение — можно вернуться на Xperia Home или выбрать другое.</string>
+    <string name="switch_open">Открыть карточку приложения</string>
 </resources>

@@ -48,7 +48,10 @@
             android:shadowDx="0"
             android:shadowDy="1" />
 
-        <TextView
+        <!-- Настоящее поле ввода: язык диктует системная клавиатура (любая IME),
+             никаких ограничений inputType. Живой фильтр по приложениям телефона;
+             кнопка «поиск» на клавиатуре — веб-поиск, если локально ничего не нашлось. -->
+        <EditText
             android:id="@+id/search"
             android:layout_width="match_parent"
             android:layout_height="40dp"
@@ -57,9 +60,13 @@
             android:gravity="center_vertical"
             android:paddingLeft="14dp"
             android:paddingRight="14dp"
-            android:text="@string/search_hint"
-            android:textColor="@color/search_hint"
-            android:textSize="15sp" />
+            android:hint="@string/search_hint"
+            android:textColorHint="@color/search_hint"
+            android:textColor="@color/search_text"
+            android:textSize="15sp"
+            android:inputType="text"
+            android:maxLines="1"
+            android:imeOptions="actionSearch|flagNoExtractUi" />
     </LinearLayout>
 
     <FrameLayout
@@ -98,5 +105,12 @@
             android:shadowRadius="4"
             android:shadowDx="0"
             android:shadowDy="1" />
+        <ru.simplelauncher.IndexBar
+            android:id="@+id/indexbar"
+            android:layout_width="26dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end|center_vertical"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp" />
     </FrameLayout>
 </LinearLayout>

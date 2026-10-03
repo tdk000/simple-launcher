@@ -22,7 +22,12 @@ import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
+import android.app.SearchManager;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.view.Window;
@@ -54,9 +59,21 @@ public class HomeActivity extends Activity {
     private TextView clock;
     private TextView date;
     private TextView empty;
-    private TextView search;
+    private EditText search;
+    private IndexBar indexBar;
     private View header;
     private AppAdapter adapter;
+
+    /** Текущий текст поиска: живой фильтр по приложениям телефона. */
+    private String query = "";
+
+    /** Разделы индекс-бара и позиции их первых плиток в текущей выдаче. */
+    private final List<String> barSections = new ArrayList<>();
+    private final List<Integer> barPositions = new ArrayList<>();
+    private final List<Integer> barSectionCodes = new ArrayList<>();
+
+    /** Алфавит индекс-бара: латиница, затем кириллица (порядок сортировки тот же). */
+    private static final String CYR = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 
     /** Настройки внешнего вида (видимость строки поиска). Разрешений не требует. */
     private static final String PREFS_NAME = "simplelauncher_prefs";
@@ -146,7 +163,8 @@ public class HomeActivity extends Activity {
         clock  = (TextView) findViewById(R.id.clock);
         date   = (TextView) findViewById(R.id.date);
         empty  = (TextView) findViewById(R.id.empty);
-        search = (TextView) findViewById(R.id.search);
+        search = (EditText) findViewById(R.id.search);
+        indexBar = (IndexBar) findViewById(R.id.indexbar);
         header = findViewById(R.id.header);
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -183,8 +201,39 @@ public class HomeActivity extends Activity {
             }
         });
 
-        search.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { openSearch(); }
+        // Живой фильтр: каждый символ уточняет список приложений телефона.
+        // Язык ввода не ограничиваем ничем: какую IME поставил пользователь,
+        // та и печатает; сравнение регистронезависимое юникодом (Locale.ROOT).
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) { }
+            @Override
+            public void afterTextChanged(Editable e) {
+                query = e == null ? "" : e.toString().trim();
+                showSorted();
+            }
+        });
+
+        // Кнопка «поиск» на клавиатуре: первый локальный результат, а если
+        // в телефоне ничего не нашлось — веб-поиск (друг просил и то, и другое).
+        search.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, android.view.KeyEvent ev) {
+                if (actionId != EditorInfo.IME_ACTION_SEARCH) {
+                    return false;
+                }
+                onSearchSubmit();
+                return true;
+            }
+        });
+
+        indexBar.setOnPickListener(new IndexBar.OnPickListener() {
+            @Override
+            public void onSectionPicked(int index) {
+                if (index >= 0 && index < barPositions.size()) {
+                    grid.setSelection(barPositions.get(index));
+                }
+            }
         });
 
         registerPackageReceiver();
@@ -307,6 +356,7 @@ public class HomeActivity extends Activity {
                 getString(R.string.menu_sort) + ": " + sortModeLabel(sortMode),
                 getString(visible ? R.string.menu_hide_search : R.string.menu_show_search),
                 getString(R.string.reload),
+                getString(R.string.menu_switch_launcher),
                 getString(R.string.menu_cancel)
         };
         new android.app.AlertDialog.Builder(this)
@@ -326,6 +376,8 @@ public class HomeActivity extends Activity {
                         } else if (which == 2) {
                             packagesChanged = true;
                             scheduleReload();
+                        } else if (which == 3) {
+                            switchHomeLauncher();
                         }
                     }
                 })
@@ -371,17 +423,93 @@ public class HomeActivity extends Activity {
         return sortLabels()[mode];
     }
 
-    /** Показывает lastItems в текущем порядке — без перечитывания пакетов. */
+    /** Показывает lastItems: сортировка + поисковый фильтр + индекс-бар. */
     private void showSorted() {
         List<AppItem> sorted = new ArrayList<>(lastItems);
+        // секции нужны ДО сортировки: сортировка по имени идёт по секциям
+        for (AppItem a : sorted) {
+            a.section = sectionOf(a.label);
+        }
         Collections.sort(sorted, comparatorFor(sortMode));
+
+        if (!TextUtils.isEmpty(query)) {
+            String q = query.toLowerCase(Locale.ROOT);
+            List<AppItem> filtered = new ArrayList<>();
+            for (AppItem a : sorted) {
+                if (matches(a, q)) {
+                    filtered.add(a);
+                }
+            }
+            sorted = filtered;
+        }
+
         adapter.setItems(sorted);
+
+        // индекс-бар имеет смысл только для алфавитного порядка без фильтра
+        barSections.clear();
+        barPositions.clear();
+        barSectionCodes.clear();
+        boolean barOn = sortMode == SORT_NAME_ASC && TextUtils.isEmpty(query);
+        if (barOn) {
+            int prev = -1;
+            for (int i = 0; i < sorted.size(); i++) {
+                int sec = sorted.get(i).section;
+                if (sec != prev) {
+                    barSections.add(sectionLabel(sec));
+                    barPositions.add(i);
+                    barSectionCodes.add(sec);
+                    prev = sec;
+                }
+            }
+        }
+        indexBar.setSections(barSections);
+        indexBar.setVisibility(barSections.size() > 1 ? View.VISIBLE : View.GONE);
+
         if (sorted.isEmpty()) {
-            empty.setText(R.string.no_apps);
+            empty.setText(TextUtils.isEmpty(query) ? R.string.no_apps : R.string.not_found_local);
             empty.setVisibility(View.VISIBLE);
         } else {
             empty.setVisibility(View.GONE);
         }
+    }
+
+    /** Сверяет приложение с запросом: имя или пакет, регистронезависимо. */
+    private static boolean matches(AppItem a, String q) {
+        if (a.label != null && String.valueOf(a.label).toLowerCase(Locale.ROOT).contains(q)) {
+            return true;
+        }
+        return a.component != null
+                && a.component.getPackageName().toLowerCase(Locale.ROOT).contains(q);
+    }
+
+    /**
+     * Код раздела для индекс-бара: 0 = «#» (цифры/символы), 1..26 = A..Z,
+     * 27..59 = А..Я (включая Ё). Латиница раньше кириллицы — тот же порядок,
+     * что и в сортировке, поэтому бар не спорит с сеткой.
+     */
+    private static int sectionOf(CharSequence label) {
+        if (TextUtils.isEmpty(label)) {
+            return 0;
+        }
+        char c = Character.toUpperCase(label.toString().trim().charAt(0));
+        if (c >= 'A' && c <= 'Z') {
+            return 1 + (c - 'A');
+        }
+        int i = CYR.indexOf(c);
+        if (i >= 0) {
+            return 27 + i;
+        }
+        return 0;
+    }
+
+    private static String sectionLabel(int code) {
+        if (code >= 1 && code <= 26) {
+            return String.valueOf((char) ('A' + code - 1));
+        }
+        if (code >= 27) {
+            return String.valueOf(CYR.charAt(code - 27));
+        }
+        return "#";
     }
 
     /**
@@ -396,6 +524,9 @@ public class HomeActivity extends Activity {
                 int r;
                 switch (mode) {
                     case SORT_NAME_DESC:
+                        if (b.section != a.section) {
+                            return Integer.compare(b.section, a.section);
+                        }
                         return collator.compare(String.valueOf(b.label), String.valueOf(a.label));
                     case SORT_INSTALL_DESC:
                         r = Long.compare(b.installTime, a.installTime);
@@ -410,6 +541,9 @@ public class HomeActivity extends Activity {
                         r = Long.compare(b.sizeBytes, a.sizeBytes);
                         break;
                     default:
+                        if (a.section != b.section) {
+                            return Integer.compare(a.section, b.section);
+                        }
                         r = collator.compare(String.valueOf(a.label), String.valueOf(b.label));
                         break;
                 }
@@ -529,21 +663,75 @@ public class HomeActivity extends Activity {
         }
     }
 
-    private void openSearch() {
+    /** Кнопка «поиск» на клавиатуре: локальный результат важнее веба. */
+    private void onSearchSubmit() {
+        if (adapter != null && adapter.getCount() > 0) {
+            launch(adapter.getItemSafe(0));
+            return;
+        }
+        openWebSearch(query);
+    }
+
+    private void openWebSearch(String q) {
+        String text = q == null ? "" : q.trim();
         Intent i = new Intent(Intent.ACTION_WEB_SEARCH);
+        if (!text.isEmpty()) {
+            i.putExtra(SearchManager.QUERY, text);
+        }
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
             startActivity(i);
-        } catch (Exception e) {
-            // нет приложения для веб-поиска — пробуем просто браузер
-            Intent b = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"));
-            b.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                startActivity(b);
-            } catch (Exception e2) {
-                Toast.makeText(this, "Нет приложения для поиска", Toast.LENGTH_SHORT).show();
-            }
+            return;
+        } catch (Exception ignored) { }
+        // нет приложения для веб-поиска — пробуем просто браузер
+        String url = text.isEmpty()
+                ? "https://www.google.com/"
+                : "https://www.google.com/search?q=" + Uri.encode(text);
+        Intent b = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        b.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(b);
+        } catch (Exception e2) {
+            Toast.makeText(this, "Нет приложения для поиска", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Простой выход из лаунчера: системный экран выбора домашнего приложения.
+     * Каскад: HOME_SETTINGS (есть не везде) -> «Приложения по умолчанию» ->
+     * карточка самого лаунчера с подсказкой про «Удалить настройки по умолчанию»
+     * (это рабочий путь на Android 6, где прямого экрана нет).
+     */
+    private void switchHomeLauncher() {
+        String[] actions = new String[] {
+                "android.settings.HOME_SETTINGS",
+                Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
+        };
+        for (String a : actions) {
+            try {
+                startActivity(new Intent(a));
+                return;
+            } catch (Exception ignored) { }
+        }
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.switch_title)
+                .setMessage(R.string.switch_msg)
+                .setPositiveButton(R.string.switch_open,
+                        new android.content.DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(android.content.DialogInterface d, int w) {
+                                Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                i.setData(Uri.fromParts("package", getPackageName(), null));
+                                try {
+                                    startActivity(i);
+                                } catch (Exception e) {
+                                    Toast.makeText(HomeActivity.this,
+                                            "Настройки недоступны", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        })
+                .setNegativeButton(R.string.menu_cancel, null)
+                .show();
     }
 
     // ---------------------------------------------------------------- загрузка списка

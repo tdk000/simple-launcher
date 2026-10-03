@@ -7,6 +7,9 @@ import android.os.UserHandle;
 
 /** Одна строка сетки приложений. */
 public class AppItem {
+    /** Индекс раздела алфавитного индекс-бара: 0 = «#», 1..26 = A..Z, 27+ = А..Я. */
+    public int section;
+
     public final CharSequence label;
     public final ComponentName component;
     public Drawable icon;
