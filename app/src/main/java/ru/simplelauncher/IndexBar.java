@@ -84,7 +84,14 @@ public class IndexBar extends View {
         float textPx = Math.min(step * 0.82f, 10f * density);
         paint.setTextSize(textPx);
         activePaint.setTextSize(textPx * 1.3f);
+        // если разделов больше, чем помещается читаемых подписей,
+        // рисуем каждую N-ю, но трогать можно все (тач маппится на все)
+        int maxLabels = Math.max(8, (int) (h / (9f * density)));
+        int every = (n + maxLabels - 1) / maxLabels;
         for (int i = 0; i < n; i++) {
+            if (i != activeIndex && (i % every) != 0) {
+                continue;
+            }
             float y = top + step * (i + 0.78f);
             canvas.drawText(sections.get(i), getWidth() / 2f, y,
                     i == activeIndex ? activePaint : paint);

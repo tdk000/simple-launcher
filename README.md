@@ -21,7 +21,9 @@ same source, two builds.
 
 - Grid of every launchable app (4 columns), sorted A→Z by default
 - Alphabet index bar on the right: `#`, `A–Z`, `А–Я` — tap or drag to jump;
-  English-named and Russian-named apps live in one consistent order
+  English- and Russian-named apps live in one consistent order. When
+  sections outnumber readable slots, the bar paints every N-th letter but
+  touch still maps to all of them
 - Live search over installed apps (label or package name, any language,
   case-insensitive); the keyboard's search key launches the top local hit,
   or falls back to a web query when nothing matched on the device
@@ -74,6 +76,12 @@ export ANDROID_HOME=/path/to/android-sdk
 bash build.sh legacy     # -> SimpleLauncher-legacy.apk
 bash build.sh modern     # -> SimpleLauncher-android17.apk
 ```
+
+> **Signing warning.** The keystore is deliberately NOT in this repository.
+> A build from a fresh clone creates its own key, and its APK will NOT
+> install as an update over an existing installation
+> (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). If you track a deployment on a
+> device, keep one keystore forever and pass it via `KEYSTORE=/path/key.jks`.
 
 The script runs `aapt2 compile` → `aapt2 link` → `javac` → `d8` →
 `zipalign` → `apksigner`. A signing keystore is created on first run at

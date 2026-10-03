@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9 — 2026-10-03 (legacy code 11, modern code 12)
+- Alphabet index bar speaks Hebrew: sections `#`, `A–Z`, `А–Я`, `א–ת`.
+  Final forms (ך ם ן ף ץ) fold into their base letter's section.
+  Field-proven on a device with mixed Hebrew/English/Russian app names.
+- Index bar thins its drawn labels when too many sections fit the screen:
+  every N-th letter is painted, but touch still maps to all sections.
+
 ## 1.8 — 2026-10-03 (legacy code 9, modern code 10)
 Field feedback release (first external user):
 - Search pill became a real EditText: live filter over installed apps by
