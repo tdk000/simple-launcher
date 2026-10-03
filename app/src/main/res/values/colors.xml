@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="transparent">#00000000</color>
+    <color name="scrim">#66000000</color>
+    <color name="label_shadow">#B0000000</color>
+    <color name="label_text">#FFFFFFFF</color>
+    <color name="header_text">#EEFFFFFF</color>
+    <color name="header_sub">#B0FFFFFF</color>
+    <color name="search_bg">#33000000</color>
+    <color name="search_text">#FFFFFFFF</color>
+    <color name="search_hint">#90FFFFFF</color>
+    <color name="accent">#FF4FC3F7</color>
+</resources>

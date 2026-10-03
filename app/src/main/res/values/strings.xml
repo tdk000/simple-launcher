@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Простой лаунчер</string>
+    <string name="loading">Загрузка приложений…</string>
+    <string name="search_hint">Поиск</string>
+    <string name="menu_app_info">О приложении</string>
+    <string name="menu_uninstall">Удалить</string>
+    <string name="menu_cancel">Отмена</string>
+    <string name="no_apps">Не найдено ни одного приложения</string>
+    <string name="reload">Обновить список</string>
+</resources>

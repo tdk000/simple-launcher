@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Корень — вертикальный LinearLayout: шапка и сетка СОСЕДИ, поэтому плитки
+  никогда не залезают под часы/плашку поиска, какой бы высоты ни была шапка
+  (крупный шрифт, перенос даты и т.п.). Раньше был FrameLayout с жёстким
+  paddingTop у GridView — из-за этого первый ряд перекрывал плашку.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/transparent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/header_text"
+            android:textSize="44sp"
+            android:textStyle="bold"
+            android:shadowColor="@color/label_shadow"
+            android:shadowRadius="6"
+            android:shadowDx="0"
+            android:shadowDy="2" />
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/header_sub"
+            android:textSize="14sp"
+            android:shadowColor="@color/label_shadow"
+            android:shadowRadius="4"
+            android:shadowDx="0"
+            android:shadowDy="1" />
+
+        <TextView
+            android:id="@+id/search"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/search_bg"
+            android:gravity="center_vertical"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:text="@string/search_hint"
+            android:textColor="@color/search_hint"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <GridView
+            android:id="@+id/grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:numColumns="4"
+            android:columnWidth="72dp"
+            android:stretchMode="columnWidth"
+            android:gravity="center_horizontal"
+            android:horizontalSpacing="4dp"
+            android:verticalSpacing="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="16dp"
+            android:clipToPadding="false"
+            android:scrollbars="none"
+            android:listSelector="@color/transparent"
+            android:cacheColorHint="@color/transparent" />
+
+        <TextView
+            android:id="@+id/empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/loading"
+            android:textColor="@color/header_text"
+            android:textSize="16sp"
+            android:shadowColor="@color/label_shadow"
+            android:shadowRadius="4"
+            android:shadowDx="0"
+            android:shadowDy="1" />
+    </FrameLayout>
+</LinearLayout>

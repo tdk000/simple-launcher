@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'ru.simplelauncher'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "ru.simplelauncher"
+        minSdk 21
+        targetSdk 23          // намеренно: не тянет runtime-permissions и новый UI
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+// Зависимостей НЕТ: только android.jar. Никаких androidx/material —
+// благодаря этому APK весит 34 КБ и ставится на Android 5.0+.
+dependencies {
+}
