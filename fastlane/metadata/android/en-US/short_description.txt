@@ -1,0 +1,1 @@
+Minimal home screen: app grid, clock and search. No permissions

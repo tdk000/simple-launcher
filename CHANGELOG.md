@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.10 — 2026-10-10 (legacy code 13, modern code 14)
+- Version information moved to a single source (`app/build.gradle`): Gradle and
+  `build.sh` can no longer drift apart (they used to disagree — Gradle said
+  1.7/8 while releases were 1.9/11-12).
+- Modern flavor now targets **API 35** (Android 15) instead of API 37, and the
+  build pins `build-tools;35.0.0` + `platforms;android-35`. This is required for
+  reproducible builds (F-Droid) and for building on standard SDK images.
+- `build.sh` no longer silently falls back to "whatever SDK is installed": it
+  fails fast if the pinned build-tools/platform are missing.
+- Added `fastlane/` metadata (title, descriptions, changelog, icon, screenshot)
+  for F-Droid.
+
 ## 1.9 — 2026-10-03 (legacy code 11, modern code 12)
 - Alphabet index bar speaks Hebrew: sections `#`, `A–Z`, `А–Я`, `א–ת`.
   Final forms (ך ם ן ף ץ) fold into their base letter's section.

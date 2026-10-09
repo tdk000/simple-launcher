@@ -4,14 +4,16 @@ plugins {
 
 android {
     namespace 'ru.simplelauncher'
-    compileSdk 37             // Android 17
+    compileSdk 35             // Android 15
 
     defaultConfig {
         applicationId "ru.simplelauncher"
         minSdk 21
-        targetSdk 37          // modern-флейвор; legacy (target 23) собирает build.sh legacy
-        versionCode 8
-        versionName "1.7"
+        targetSdk 35          // modern-флейвор; legacy (target 23) собирает build.sh legacy
+        // ЕДИНСТВЕННЫЙ ИСТОЧНИК ВЕРСИИ: отсюда читает и build.sh, и F-Droid.
+        // legacy-APK получает versionCode на единицу меньше (см. build.sh).
+        versionCode 14
+        versionName "1.10"
     }
 
     buildTypes {
@@ -27,6 +29,6 @@ android {
 }
 
 // Зависимостей НЕТ: только android.jar. Никаких androidx/material —
-// благодаря этому APK весит 34 КБ и ставится на Android 5.0+.
+// благодаря этому APK весит ~35 КБ и ставится на Android 5.0+.
 dependencies {
 }

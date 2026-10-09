@@ -1,0 +1,26 @@
+Simple Launcher is a tiny home screen replacement: your apps in one
+alphabetical grid over your own wallpaper, plus a clock and a search field
+that searches the phone.
+
+There are no pages, no dock, no widgets, no folders, no gestures, no icon
+packs, no accounts, no ads and no analytics. The app declares zero
+permissions and never touches the network.
+
+Features:
+
+* Grid of every launchable app, sorted A to Z by default.
+* Alphabet index bar on the right (digits, Latin A-Z, Cyrillic A-Z, Hebrew):
+  tap or drag to jump. Labels thin out when there are many sections, but touch
+  still reaches all of them.
+* Live search over installed apps by name or package name, any language,
+  case-insensitive. The keyboard's search key opens the top local hit, or
+  falls back to a web search when nothing on the phone matches.
+* Clock and date over the wallpaper; translucent system bars.
+* Long-press an app for app info or uninstall.
+* Long-press the clock for sort order (six modes), hiding the search field,
+  reloading the list, and switching the default launcher.
+* Work profile support: badged icons, per-profile launch and app info, quiet
+  profiles skipped.
+* The list refreshes itself when packages are installed or removed.
+
+The app runs on Android 5.0 (API 21) and up.

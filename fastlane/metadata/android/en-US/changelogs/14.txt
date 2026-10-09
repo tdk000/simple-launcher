@@ -1,0 +1,5 @@
+1.10
+* Version information is now read from a single source (app/build.gradle),
+  so Gradle and build.sh can no longer drift apart.
+* Modern build targets Android 15 (API 35); legacy build still targets 23.
+* Build tool and SDK platform versions are pinned for reproducible builds.

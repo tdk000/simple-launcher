@@ -2,5 +2,5 @@
 // Для сборки из командной строки без Gradle есть build.sh — он делает то же
 // самое через aapt2/javac/d8/zipalign/apksigner.
 plugins {
-    id 'com.android.application' version '8.5.2' apply false
+    id 'com.android.application' version '8.6.1' apply false
 }

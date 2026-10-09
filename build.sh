@@ -3,26 +3,43 @@
 #  build.sh — сборка SimpleLauncher БЕЗ Gradle.
 #  Только aapt2 + javac + d8 + zipalign + apksigner из Android SDK.
 #
-#  Нужны: JDK 11+ и Android SDK (build-tools 34, platforms;android-34).
+#  Нужны: JDK 11+ и Android SDK. Версии инструментов ЗАФИКСИРОВАНЫ ниже и
+#  совпадают с релизными (это нужно для воспроизводимой сборки в F-Droid):
+#     modern -> build-tools;35.0.0 + platforms;android-35
+#     legacy -> build-tools;34.0.0 + platforms;android-34
 #  Переменные окружения:
 #     ANDROID_HOME   (по умолчанию /opt/android-sdk или ~/Android/Sdk)
 #     JAVA_HOME
 #
 #  Результат: build/<имя>.apk  (подписан, выровнен, ставится на телефон)
 #
-#  ДВА ФЛЕЙВОРА из одного исходника:
-#     bash build.sh modern   (по умолчанию) targetSdk 37 — Android 17: Pixel 6a и новее
-#     bash build.sh legacy   targetSdk 23 — Android 6: Xperia Z3 Compact и старые
+#  ДВА ФЛЕЙВОРА из одного исходника (версия читается из app/build.gradle):
+#     bash build.sh modern   (по умолчанию) targetSdk 35 — Android 15 и новее
+#     bash build.sh legacy   targetSdk 23 — Android 5.0–7.x: Xperia Z3 Compact и старые
 # =====================================================================
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# Воспроизводимость (F-Droid): фиксируем локаль/часовой пояс. Если SOURCE_DATE_EPOCH
+# не задан, используем фиксированную дату — иначе zip кладёт в APK время сборки.
+export TZ=UTC LC_ALL=C
+SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-1546300800}"   # 2019-01-01T00:00:00Z
+STAMP="$(date -u -d "@$SOURCE_DATE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || echo 201901010000.00)"
+
+# ---------- версия: единственный источник — app/build.gradle ----------
+# (тот же файл читает F-Droid и Gradle; версия физически не может разойтись)
+GRADLE_SRC="$PWD/app/build.gradle"
+VNAME="$(grep -oE "versionName[[:space:]]+['\"][^'\"]+['\"]" "$GRADLE_SRC" | head -1 | sed -E "s/.*['\"]([^'\"]+)['\"].*/\1/")"
+VCODE_MODERN="$(grep -oE "versionCode[[:space:]]+[0-9]+" "$GRADLE_SRC" | head -1 | grep -oE "[0-9]+")"
+: "${VNAME:?Не нашёл versionName в app/build.gradle}"
+: "${VCODE_MODERN:?Не нашёл versionCode в app/build.gradle}"
+
 # ---------- флейвор ----------
 FLAVOR="${1:-modern}"
 case "$FLAVOR" in
-  modern) TARGET_API=37; VCODE=12; VNAME="1.9"; PLATDIR="android-37.0"; OUTNAME="SimpleLauncher-android17.apk" ;;
-  legacy) TARGET_API=23; VCODE=11; VNAME="1.9"; PLATDIR="android-34";     OUTNAME="SimpleLauncher-legacy.apk"  ;;
+  modern) TARGET_API=35; VCODE="$VCODE_MODERN"; PLATDIR="android-35"; BTVER="35.0.0"; OUTNAME="SimpleLauncher-modern.apk" ;;
+  legacy) TARGET_API=23; VCODE="$((VCODE_MODERN - 1))"; PLATDIR="android-34"; BTVER="34.0.0"; OUTNAME="SimpleLauncher-legacy.apk" ;;
   *) echo "Использование: bash build.sh [modern|legacy]"; exit 2 ;;
 esac
 echo "== флейвор:  $FLAVOR (target $TARGET_API, version $VNAME/$VCODE)"
@@ -35,13 +52,13 @@ if [ -z "${ANDROID_HOME:-}" ]; then
 fi
 : "${ANDROID_HOME:?Не найден Android SDK. Задай ANDROID_HOME=/путь/к/sdk}"
 
-BT="${ANDROID_HOME}/build-tools/34.0.0"
-[ -d "$BT" ] || BT="$(ls -d "$ANDROID_HOME"/build-tools/* 2>/dev/null | sort -V | tail -1)"
-: "${BT:?В SDK нет build-tools. Поставь: sdkmanager \"build-tools;34.0.0\"}"
+# Платформа и build-tools ЗАФИКСИРОВАНЫ (без «возьми что есть»): воспроизводимая
+# сборка для F-Droid требует РОВНО тех же инструментов, что и у релиза.
+BT="${ANDROID_HOME}/build-tools/${BTVER}"
+[ -d "$BT" ] || { echo "В SDK нет build-tools;${BTVER}. Поставь: sdkmanager \"build-tools;${BTVER}\"" >&2; exit 1; }
 
 PLATFORM="${ANDROID_HOME}/platforms/${PLATDIR}/android.jar"
-[ -f "$PLATFORM" ] || PLATFORM="$(ls "$ANDROID_HOME"/platforms/*/android.jar 2>/dev/null | sort -V | tail -1)"
-: "${PLATFORM:?В SDK нет platforms;${PLATDIR}. Поставь: sdkmanager \"platforms;${PLATDIR}\"}"
+[ -f "$PLATFORM" ] || { echo "В SDK нет platforms;${PLATDIR}. Поставь: sdkmanager \"platforms;${PLATDIR}\"" >&2; exit 1; }
 
 AAPT2="$BT/aapt2"
 D8="$BT/d8"
@@ -122,7 +139,9 @@ echo "      ok -> $DEX_OUT/classes.dex ($(du -h "$DEX_OUT/classes.dex" | cut -f1
 
 # ---------- 5. добавляем classes.dex в apk ----------
 echo "[5/7] упаковываю classes.dex"
-( cd "$DEX_OUT" && zip -q -0 "$OLDPWD/$APK_UNSIGNED" classes.dex )
+# -X (без доп. атрибутов) + фиксированный mtime = воспроизводимо
+find "$OBJ" "$DEX_OUT" -exec touch -t "$STAMP" {} +
+( cd "$DEX_OUT" && zip -q -0 -X "$OLDPWD/$APK_UNSIGNED" classes.dex )
 echo "      ok"
 
 # ---------- 6. zipalign ----------

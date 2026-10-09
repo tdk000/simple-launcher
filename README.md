@@ -14,7 +14,7 @@ The header overlap visible in this early photo was fixed in v1.2.*
 It was written for a 2014 phone that could not run any modern launcher:
 every candidate either crashed on missing framework classes or demanded
 Android 8+. So this one targets **API 21** in its legacy flavor and uses
-nothing newer, while a second flavor targets **API 37** for current devices —
+nothing newer, while a second flavor targets **API 35** for current devices —
 same source, two builds.
 
 ## Features
@@ -46,7 +46,7 @@ accounts, analytics, ads or network access. The manifest declares
 | | legacy | modern |
 |---|---|---|
 | `minSdk` | 21 | 21 |
-| `targetSdk` | 23 | 37 |
+| `targetSdk` | 23 | 35 |
 | for | Android 5–7, old devices (Xperia Z3 Compact et al.) | Android 8+, current devices (Pixel 6a et al.) |
 | notes | avoids runtime-permission and package-visibility regimes entirely | `<queries>` for package visibility on 11+, `RECEIVER_NOT_EXPORTED` under SDK guard, edge-to-edge |
 
@@ -68,13 +68,14 @@ To leave: long-press the clock → *Switch default launcher…*
 
 ### Without Gradle (fast, no Android Studio)
 
-Requires JDK 11+ and an Android SDK with `build-tools;34.0.0` plus
-`platforms;android-34` (and `platforms;android-37.0` for the modern flavor):
+Requires JDK 11+ and an Android SDK with `build-tools;35.0.0` +
+`platforms;android-35` (modern flavor) and `build-tools;34.0.0` +
+`platforms;android-34` (legacy flavor):
 
 ```
 export ANDROID_HOME=/path/to/android-sdk
-bash build.sh legacy     # -> SimpleLauncher-legacy.apk
-bash build.sh modern     # -> SimpleLauncher-android17.apk
+bash build.sh legacy     # -> SimpleLauncher-legacy.apk  (targetSdk 23)
+bash build.sh modern     # -> SimpleLauncher-modern.apk  (targetSdk 35)
 ```
 
 > **Signing warning.** The keystore is deliberately NOT in this repository.
@@ -92,7 +93,7 @@ APK signed with a different key.
 ### With Gradle / Android Studio
 
 Open the folder as a project and build as usual (`app/build.gradle`,
-AGP 8.5, Gradle 8.7 wrapper properties included).
+AGP 8.6, Gradle 8.7 wrapper properties included).
 
 ## Project layout
 
